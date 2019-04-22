@@ -1,0 +1,31 @@
+# Git Ignore File
+# Extension ignores
+*.log
+*.db
+*.db-shm
+*.db-wal
+*.pyc
+*.conf*
+.aarlo/*
+
+# Directory (contents) ignores
+.cloud
+.storage
+deps
+
+# Specific file ignores
+.homekit.state
+.ios.conf
+*flows.json*
+ip_bans.yaml
+known_devices.yaml
+options.xml
+OZW_Log.txt
+pyozw.sqlite
+secrets.yaml
+zwcfg_*
+zwscene.xml
+.uuid
+
+# Specific keeps
+!.gitkeep

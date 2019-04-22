@@ -1,0 +1,12 @@
+---
+# Implements custom arlo component
+# 
+# https://github.com/twrecked/hass-aarlo
+# 
+aarlo:
+  username: !secret arlo_username
+  password: !secret arlo_password
+  packet_dump: True
+  conf_dir: /home/hass/homeassistant/.aarlo
+  recent_time: 8
+  last_format: '%m-%d %H:%M'

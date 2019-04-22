@@ -1,0 +1,4 @@
+---
+platform: plex
+host: !secret plex_host
+token: !secret plex_token

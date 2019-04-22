@@ -1,0 +1,7 @@
+---
+# Adds access to alexa skill via haaska
+#
+# https://github.com/mike-grant/haaska
+#
+alexa:
+  smart_home:

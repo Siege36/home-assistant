@@ -1,0 +1,5 @@
+name: vidant
+latitude: !secret vidant_latitude
+longitude: !secret vidant_longitude
+radius: !secret vidant_radius
+icon: fal:hospital

@@ -1,0 +1,16 @@
+---
+# Connects to my MQTT broker, for which I use the Mosquito add-on:
+#
+# https://www.home-assistant.io/addons/mosquitto/
+#
+mqtt:
+  broker: 192.168.1.121
+  port: 1883
+  username: !secret mqtt_username
+  password: !secret mqtt_password
+  birth_message:
+    topic: 'hassio/homeassistant/status'
+    payload: 'online'
+  will_message:
+    topic: 'hassio/homeassistant/status'
+    payload: 'offline'

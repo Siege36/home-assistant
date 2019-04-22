@@ -1,0 +1,9 @@
+---
+# Allows notifications on my Bonus Room TV.
+#
+# https://www.home-assistant.io/components/notify.webostv/
+#
+platform: webostv
+host: !secret bonus_room_tv_host
+name: bonus_room_tv_notify
+filename: bonus_room_tv_notify.conf

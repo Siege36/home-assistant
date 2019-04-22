@@ -1,0 +1,6 @@
+---
+# This file loads vacuums
+#
+# https://www.home-assistant.io/components/#vacuum
+#
+vacuum: !include_dir_list ../vacuums

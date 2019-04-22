@@ -1,0 +1,18 @@
+---
+platform: darksky
+api_key: !secret darksky_api
+forecast:
+  - 0
+  - 1
+  - 2
+monitored_conditions:
+  - summary
+  - icon
+  - temperature
+  - precip_probability
+  - apparent_temperature
+  - humidity
+  - temperature_high
+  - temperature_low
+  - sunrise_time
+  - sunset_time

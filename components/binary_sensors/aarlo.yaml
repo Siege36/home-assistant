@@ -1,0 +1,10 @@
+---
+# Implements the binary sensors for aarlo custom component
+# 
+# https://github.com/twrecked/hass-aarlo
+# 
+platform: aarlo
+monitored_conditions:
+- motion
+- sound
+- ding 

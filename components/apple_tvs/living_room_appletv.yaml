@@ -1,0 +1,10 @@
+---
+# Adds my Living Room Apple TV.
+#
+# https://www.home-assistant.io/components/apple_tv/
+#
+host: !secret living_room_apple_tv_host
+login_id: !secret living_room_apple_tv_login_id
+credentials: !secret living_room_apple_tv_credentials
+name: living_room_apple_tv
+start_off: true
