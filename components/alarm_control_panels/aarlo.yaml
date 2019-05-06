@@ -1,6 +1,6 @@
 ---
-# intializes aarlo alarm control panel
-# 
+# Itegrates arlo base stations as alarm panels
+#
 # https://github.com/twrecked/hass-aarlo
 #
 platform: aarlo

@@ -656,9 +656,10 @@ class AarloGlance extends LitElement {
     async showOrStopStream( id ) {
         const camera = this.safe_state(this._hass,this._cameraId,'unknown')
 		if ( camera.state == 'streaming' ) {
-			this.stopStream( iD )
+		    console.log(id);
+			this.stopStream( id );
 		} else {
-			this.showStream( iD )
+			this.showStream( id );
 		}
 	}
 

@@ -1,7 +1,2 @@
----
-# Installation of aarlo cameras
-# 
-# https://github.com/twrecked/hass-aarlo
-# 
 platform: aarlo
-ffmpeg_arguments: '-pred 1 -q:v 2' 
+ffmpeg_arguments: '-pred 1 -q:v 2'
