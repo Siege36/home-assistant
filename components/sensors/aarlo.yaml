@@ -5,3 +5,6 @@ monitored_conditions:
   - battery_level
   - captured_today
   - signal_strength 
+  - temperature
+  - humidity
+  - air_quality

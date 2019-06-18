@@ -1,0 +1,7 @@
+platform: mqtt
+name: "Color 1"
+command_topic: "computer_lights/ColorPower"
+state_topic: "computer_lights/powerState"
+rgb_command_topic: "computer_lights/color1"
+rgb_state_topic: "computer_lights/color1State"
+retain: true

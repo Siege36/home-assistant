@@ -1,24 +1,10 @@
-platform: mqtt
-name: "roomba"
-supported_features:
-  - turn_on
-  - turn_off
-  - pause
-  - stop
-  - return_home
-  - battery
-  - status
-  - locate
-  - send_command
-command_topic: "vacuum/command"
-battery_level_topic: "vacuum/state"
-battery_level_template: "{{ value_json.battery_level }}"
-charging_topic: "vacuum/state"
-charging_template: "{{ value_json.charging }}"
-cleaning_topic: "vacuum/state"
-cleaning_template: "{{ value_json.cleaning }}"
-docked_topic: "vacuum/state"
-docked_template: "{{ value_json.docked }}"
-error_topic: "vacuum/state"
-error_template: "{{ value_json.error }}"
-send_command_topic: 'vacuum/send_command'
+---
+# The roomba component allows you to control your iRobot Roomba vacuum.
+#
+# https://www.home-assistant.io/components/roomba/
+#
+platform: roomba
+host: !secret roomba_host
+username: !secret roomba_username
+password: !secret roomba_password
+certificate: !secret http_ssl_certificate

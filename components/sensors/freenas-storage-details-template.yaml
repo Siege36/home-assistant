@@ -1,0 +1,8 @@
+---
+# Splits FreeNAS Storage data via REST API into usuable sensors
+platform: template
+sensors:
+  freenas_storage_status:
+    value_template: '{{ states.sensor.freenas_stats.attributes["status"] }}'
+  freenas_storage_pct:
+    value_template: '{{ states.sensor.freenas_stats.attributes["used_pct"] }}'
