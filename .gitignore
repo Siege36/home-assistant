@@ -7,6 +7,7 @@
 *.pyc
 *.conf*
 .aarlo/*
+*.pickle
 
 # Directory (contents) ignores
 .cloud
@@ -29,3 +30,4 @@ zwscene.xml
 
 # Specific keeps
 !.gitkeep
+!secrets.example.yaml
