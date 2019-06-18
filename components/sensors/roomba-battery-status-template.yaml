@@ -1,0 +1,12 @@
+---
+# Splits Roomba attributes out to own sensor
+platform: template
+sensors:
+  roomba_status:
+    value_template: '{{ states.vacuum.roomba.attributes["status"] }}'
+  roomba_battery:
+    value_template: '{{ states.vacuum.roomba.attributes["battery_level"] }}'
+    device_class: battery
+    unit_of_measurement: '%'
+  roomba_bin:
+    value_template: '{{ states.vacuum.roomba.attributes["bin_present"] }}'
