@@ -1,0 +1,8 @@
+---
+# Implementation of bed occupancy sensor
+# 
+# https://github.com/Siege36/bed-occupancy-sensor
+#
+platform: mqtt
+state_topic: 'cj-bed-sensor'
+name: "Raw CJ Bed Weight Measurement"

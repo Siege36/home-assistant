@@ -6,6 +6,5 @@
 logger:
   default: warn
   logs:
-    pyaarlo: debug
-    homeassistant.components.smartthings: debug
+    custom_components.hacs: debug
     

@@ -4,7 +4,3 @@
 # https://github.com/twrecked/hass-aarlo
 # 
 platform: aarlo
-monitored_conditions:
-- motion
-- sound
-- ding 

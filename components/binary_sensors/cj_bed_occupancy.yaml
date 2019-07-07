@@ -1,0 +1,10 @@
+---
+#
+#
+#
+#
+platform: template
+sensors:
+  cj_bed_occupancy:
+    device_class: occupancy
+    value_template: "{{ states('sensor.raw_cj_bed_weight_measurement')|float > 2100 }}"
