@@ -1,0 +1,8 @@
+---
+# https://www.home-assistant.io/components/time_date/
+#
+# The Alarm Time input by the User
+#
+alarmclock_time:
+  has_date: false
+  has_time: true

@@ -8,4 +8,3 @@ aarlo:
   password: !secret arlo_password
   packet_dump: True
   last_format: '%m/%d %I:%M %p'
-  refresh_devices_every: 12

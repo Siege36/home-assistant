@@ -1,0 +1,7 @@
+---
+# https://www.home-assistant.io/components/input_boolean/
+#
+# Used to toggle alarm clock active status
+#
+alarm_clock_active:
+  initial: on

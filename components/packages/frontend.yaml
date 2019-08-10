@@ -9,10 +9,10 @@ frontend:
 
   # List of additional resources to load (latest javascript)
   extra_html_url:
-    - /local/font-awesome-pro-5.8.1/hass-fontawesome-solid.html
-    - /local/font-awesome-pro-5.8.1/hass-fontawesome-regular.html
-    - /local/font-awesome-pro-5.8.1/hass-fontawesome-brands.html
-    - /local/font-awesome-pro-5.8.1/hass-fontawesome-light.html
+    - /local/font-awesome-pro-5.10.1/hass-fontawesome-solid.html
+    - /local/font-awesome-pro-5.10.1/hass-fontawesome-regular.html
+    - /local/font-awesome-pro-5.10.1/hass-fontawesome-brands.html
+    - /local/font-awesome-pro-5.10.1/hass-fontawesome-light.html
 
   # List of additional resource to load (es5 javascript)
   extra_html_url_es5: []

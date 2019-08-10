@@ -35,3 +35,8 @@ homeassistant:
   packages: !include_dir_named components/packages
   whitelist_external_dirs:
     - /home/hass/homeassistant/www/aarlo-snapshots
+
+hacs:
+  token: !secret github-hacs-token
+  python_script: true
+  theme: true

@@ -6,5 +6,6 @@
 theme:
   options:
     - Default
-    - Midnight
+    - Dark with Accent
     - Slate
+    - Clear
