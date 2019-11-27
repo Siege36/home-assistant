@@ -1,9 +1,0 @@
----
-# Exploses a sensor variable that displays the most recent plays on Plex
-# 
-# https://github.com/Tautulli/Tautulli
-# 
-platform: mqtt
-name: plex_play
-state_topic: "tautulli/play"
-value_template: "{{ value_json.body }}"

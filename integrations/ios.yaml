@@ -1,0 +1,25 @@
+---
+# The Home Assistant for iOS app offers a companion app for iOS which
+# is deeply integrated into both Home Assistant and iOS.
+#
+# https://companion.home-assistant.io/en/getting_started/migration
+# --- 
+# After mobile app update 2.0 iOS integration only required for actionable notifications
+#
+ios:
+  push:
+    categories:
+      - name: CloseGarage
+        identifier: 'closegarage'
+        actions:
+          - identifier: 'CLOSE_GARAGE'
+            title: 'Close Garage'
+            authenticationRequired: true
+            destructive: true
+      - name: StartRoomba
+        identifier: 'startroomba'
+        actions:
+          - identifier: 'START_ROOMBA'
+            title: 'Start Roomba'
+            authenticationRequired: true
+            destructive: true

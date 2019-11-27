@@ -1,6 +1,0 @@
----
-# The calendar component allows you to add various different calendar sources
-#
-# https://www.home-assistant.io/components/#search/calendar
-#
-calendar: !include_dir_list ../calendars

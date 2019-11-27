@@ -1,0 +1,14 @@
+---
+# Pulls in freenas storage data via REST API
+platform: rest
+name: freenas_stats
+value_template: '{{value_json.vol_name}}'
+json_attributes:
+  - status
+  - used_pct
+resource: http://192.168.1.111/api/v1.0/storage/volume/pool_1/?format=json
+username: !secret freenas_user
+password: !secret freenas_password
+authentication: basic
+headers:
+  Content-Type: application/json

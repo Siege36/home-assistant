@@ -1,8 +1,0 @@
-# Exposes the home assistant version to the front end for a given source
-# 
-# https://www.home-assistant.io/components/sensor.version/
-# 
----
-platform: version
-name: ha-version-latest
-source: hassio

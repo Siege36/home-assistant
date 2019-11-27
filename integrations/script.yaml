@@ -1,0 +1,6 @@
+---
+# Script Automation Component
+#
+# https://www.home-assistant.io/components/script/
+#
+script: !include_dir_merge_named ../scripts

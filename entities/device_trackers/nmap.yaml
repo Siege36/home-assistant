@@ -1,0 +1,14 @@
+---
+# As an alternative to the router-based device tracking, 
+# it is possible to directly scan the network for devices by using Nmap.
+#
+# https://www.home-assistant.io/components/device_tracker.nmap_tracker/
+#
+platform: nmap_tracker
+hosts: 192.168.1.0/24
+interval_seconds: 8
+home_interval: 10
+consider_home: 540
+track_new_devices: no
+exclude:
+  - 192.168.1.150 # Home Assistant, Scanning the host where Home Assistant is running can cause problems 

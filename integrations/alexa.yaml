@@ -1,0 +1,57 @@
+---
+# Adds access to alexa skill via haaska
+#
+# https://github.com/mike-grant/haaska
+#
+alexa:
+  smart_home:
+    filter:
+      include_domains:
+        - cover
+        - switch
+        - light
+        - lock
+      include_entities:
+        - input_boolean.btn_dinner_ready
+        - input_boolean.house_guests
+        - media_player.bonus_room_tv
+    entity_config:
+      cover.garage_door:
+        name: Garage Door
+        display_categories: DOOR
+      input_boolean.btn_dinner_ready:
+        name: Dinner Ready
+        display_categories: SWITCH
+      input_boolean.house_guests:
+        name: House Guests
+        display_categories: SWITCH
+      light.garden_lights:
+        name: Garden Lights
+        display_categories: LIGHT
+      light.living_room_lamp:
+        name: Living Room Lamp
+        display_categories: LIGHT
+      light.maras_lamp:
+        name: Maras Lamp
+        display_categories: LIGHT
+      lock.door_to_garage:
+        name: Door to Garage
+        display_categories: DOOR
+      media_player.bonus_room_tv:
+        name: Bonus Room TV
+        display_categories: TV
+      switch.bonus_room_lamp:
+        name: Bonus Room Lamp
+        display_categories: LIGHT
+      switch.christmas_lights:
+        name: Christmas Lights
+        display_categories: LIGHT
+      switch.christmas_tree:
+        name: Christmas Tree
+        display_categories: LIGHT
+      switch.front_porch_light:
+        name: Front Porch Light
+        display_categories: LIGHT
+      switch.garage_outside_light:
+        name: Garage Outside Light
+        display_categories: LIGHT

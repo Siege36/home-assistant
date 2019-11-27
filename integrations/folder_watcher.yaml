@@ -1,0 +1,7 @@
+---
+# Implements folder watcher
+#
+# https://www.home-assistant.io/components/folder_watcher/
+#
+folder_watcher:
+  - folder: /home/hass/homeassistant/www/images/aarlo_snapshots

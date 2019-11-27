@@ -14,6 +14,8 @@
 .cloud
 .storage
 deps
+www/font_awesome/*
+www/images/aarlo_snapshots/*
 
 # Specific file ignores
 .homekit.state

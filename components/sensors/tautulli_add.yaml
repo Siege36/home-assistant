@@ -1,9 +1,0 @@
----
-# Exploses a sensor variable that displays the most recent additions on Plex
-# 
-# https://github.com/Tautulli/Tautulli
-# 
-platform: mqtt
-name: plex_add
-state_topic: "tautulli/add"
-value_template: "{{ value_json.body }}"

@@ -1,0 +1,5 @@
+---
+hacs:
+  token: !secret github-hacs-token
+  python_script: true
+  theme: true

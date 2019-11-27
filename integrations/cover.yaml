@@ -1,0 +1,6 @@
+---
+# Adds covers (garage door/blinds/etc.)
+#
+# https://www.home-assistant.io/components/cover.mqtt/
+#
+cover: !include_dir_list ../entities/covers

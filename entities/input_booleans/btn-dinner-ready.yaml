@@ -1,0 +1,10 @@
+---
+# This is an input boolean to use with automations
+# use to to turn on/off push notifications
+#
+# https://www.home-assistant.io/components/input_boolean/
+#
+btn_dinner_ready:
+  name: Dinner Ready
+  initial: off
+  icon: mdi:silverware-fork-knife

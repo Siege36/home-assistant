@@ -1,0 +1,10 @@
+---
+# Adds my Master Bedroom Apple TV.
+#
+# https://www.home-assistant.io/components/apple_tv/
+#
+host: !secret master_bedroom_apple_tv_host
+login_id: !secret master_bedroom_apple_tv_login_id
+credentials: !secret master_bedroom_apple_tv_credentials
+name: master_bedroom_appletv
+start_off: true

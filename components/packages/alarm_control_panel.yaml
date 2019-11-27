@@ -1,6 +1,0 @@
----
-# Enables the use of Alarm Control Panels, I currently only own Arlo
-#
-# https://www.home-assistant.io/components/alarm_control_panel.arlo/
-# 
-alarm_control_panel: !include_dir_list ../alarm_control_panels

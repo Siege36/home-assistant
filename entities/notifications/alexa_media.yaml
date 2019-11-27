@@ -1,0 +1,7 @@
+---
+# Allows notifications to be sent to Alexa enabled devices. Uses alexa_media_player custom component
+#
+# https://github.com/keatontaylor/alexa_media_player/wiki/Notification-Component
+#
+platform: alexa_media
+name: alexa_media

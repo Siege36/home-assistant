@@ -1,5 +1,0 @@
-name: ecu
-latitude: !secret ecu_latitude
-longitude: !secret ecu_longitude
-radius: !secret ecu_radius
-icon: fal:university

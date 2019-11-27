@@ -1,0 +1,9 @@
+---
+# Allows notifications on my Living Room TV.
+#
+# https://www.home-assistant.io/components/media_player.webostv/
+#
+platform: webostv
+host: !secret living_room_tv_host
+name: living_room_tv_notify
+filename: living_room_tv_notify.conf

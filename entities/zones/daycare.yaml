@@ -1,0 +1,5 @@
+name: daycare
+latitude: !secret daycare_latitude
+longitude: !secret daycare_longitude
+radius: !secret daycare_radius
+icon: fal:backpack

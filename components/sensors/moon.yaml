@@ -1,5 +1,0 @@
----
-# Exploses a sensor variable that displays moon phases
-# 
-platform: moon
-name: moon
