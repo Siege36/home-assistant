@@ -12,14 +12,18 @@ homekit:
 
   # Filters for domains & entities to be included / excluded from HomeKit.
   filter: 
-    include_domains:
-      - light
-      - cover
-      - lock
-      - switch
     include_entities:
+      - cover.garage_door
       - input_boolean.btn_dinner_ready
       - input_boolean.house_guests
+      - light.garden_lights
+      - light.living_room_lamp
+      - light.maras_lamp
+      - lock.door_to_garage
+      - switch.bonus_room_lamp
+      - switch.christmas_tree
+      - switch.front_porch_light
+      - switch.garage_outside_light
   # Configuration for specific entities. Allows customization of names and types
   # These are imported from another folder, to decouple them from the packages.
   entity_config:

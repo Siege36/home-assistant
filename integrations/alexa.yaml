@@ -6,15 +6,18 @@
 alexa:
   smart_home:
     filter:
-      include_domains:
-        - cover
-        - switch
-        - light
-        - lock
       include_entities:
+        - cover.garage_door
         - input_boolean.btn_dinner_ready
         - input_boolean.house_guests
-        - media_player.bonus_room_tv
+        - light.garden_lights
+        - light.living_room_lamp
+        - light.maras_lamp
+        - lock.door_to_garage
+        - switch.bonus_room_lamp
+        - switch.christmas_tree
+        - switch.front_porch_light
+        - switch.garage_outside_light
     entity_config:
       cover.garage_door:
         name: Garage Door
