@@ -30,6 +30,7 @@ secrets.yaml
 zwcfg_*
 zwscene.xml
 .uuid
+google_calendars.yaml
 
 # Specific keeps
 !.gitkeep
