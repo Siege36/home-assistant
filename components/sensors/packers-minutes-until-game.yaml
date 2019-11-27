@@ -1,0 +1,13 @@
+---
+# Template for minutes until packers game
+platform: template
+sensors:
+  packers_minutes_until_game:
+    entity_id: sensor.time
+    unit_of_measurement: minutes
+    value_template: >-
+      {% if states.calendar.green_bay_packers.attributes.start_time %}
+        {{((as_timestamp(states.calendar.green_bay_packers.attributes.start_time) - as_timestamp(now())) / 60) | int }}
+      {%- else -%}
+        0
+      {%- endif %}

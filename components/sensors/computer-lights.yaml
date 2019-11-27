@@ -1,3 +1,0 @@
-platform: mqtt
-name: "Current LED"
-state_topic: "computer_lights/locator"

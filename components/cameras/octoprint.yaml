@@ -1,0 +1,9 @@
+---
+# Octoprint Camera
+#
+#
+#
+platform: mjpeg
+mjpeg_url: http://192.168.1.103/webcam/?action=stream&1569692736600
+still_image_url: http://192.168.1.103/webcam/?action=snapshot&1570297477683
+name: Ender 3 Pro Camera

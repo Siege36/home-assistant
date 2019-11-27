@@ -1,0 +1,6 @@
+---
+#
+# https://github.com/twrecked/hass-aarlo
+#
+#
+platform: aarlo

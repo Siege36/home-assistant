@@ -1,0 +1,7 @@
+---
+# Template for minutes until packers game
+platform: template
+sensors:
+  packers_next_game:
+    value_template: >-
+        {{ as_timestamp(states.calendar.green_bay_packers.attributes.start_time) | timestamp_custom('%a, %m/%d @ %-I:%M %p') }}

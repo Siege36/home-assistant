@@ -1,7 +1,7 @@
 import threading
 from datetime import datetime, timedelta
 
-from .constant import LIBRARY_URL, PRELOAD_DAYS
+from .constant import LIBRARY_PATH, PRELOAD_DAYS
 from .util import (arlotime_strftime, arlotime_to_datetime, http_get,
                    http_stream)
 
@@ -26,7 +26,7 @@ class ArloMediaLibrary(object):
 
         # grab today's images
         date_to = datetime.today().strftime('%Y%m%d')
-        data = self._arlo.be.post(LIBRARY_URL, {'dateFrom': date_to, 'dateTo': date_to})
+        data = self._arlo.be.post(LIBRARY_PATH, {'dateFrom':date_to, 'dateTo':date_to})
 
         # get current videos
         with self._lock:
@@ -46,7 +46,7 @@ class ArloMediaLibrary(object):
 
             key = '{0}:{1}'.format(video.get('deviceId'), arlotime_strftime(video.get('localCreatedDate')))
             if key in keys:
-                # self._arlo.debug( 'skipping {0}, already present'.format( key ) )
+                self._arlo.debug( 'skipping {0}, already present'.format( key ) )
                 continue
 
             self._arlo.debug('adding {0}'.format(key))
@@ -77,7 +77,7 @@ class ArloMediaLibrary(object):
         date_to = now.strftime('%Y%m%d')
 
         # save videos for cameras we know about
-        data = self._arlo.be.post(LIBRARY_URL, {'dateFrom': date_from, 'dateTo': date_to})
+        data = self._arlo.be.post(LIBRARY_PATH, {'dateFrom':date_from, 'dateTo':date_to})
         videos = []
         keys = []
         for video in data:
@@ -92,6 +92,9 @@ class ArloMediaLibrary(object):
                 self._arlo.debug('adding {0}'.format(key))
                 videos.append(ArloVideo(video, camera, self._arlo))
                 keys.append(key)
+            else:
+                key = '{0}:{1}'.format(video.get('deviceId'), arlotime_strftime(video.get('localCreatedDate')))
+                self._arlo.debug('skipping {0}'.format(key))
 
         # set update count, load() never runs callbacks
         with self._lock:

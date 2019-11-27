@@ -6,5 +6,5 @@
 logger:
   default: warn
   logs:
-    custom_components.hacs: debug
-    pyaarlo: debug
+    custom_components.hacs: warn
+    pyaarlo: warn

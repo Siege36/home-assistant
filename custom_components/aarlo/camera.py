@@ -6,10 +6,12 @@ https://home-assistant.io/components/camera.arlo/
 """
 import base64
 import logging
+from datetime import timedelta
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 from homeassistant.components import websocket_api
 from homeassistant.components.camera import (ATTR_FILENAME,
                                              CAMERA_SERVICE_SCHEMA,
@@ -27,6 +29,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.helpers.config_validation import (PLATFORM_SCHEMA)
+from homeassistant.helpers.event import async_track_point_in_time
 from . import CONF_ATTRIBUTION, DATA_ARLO, DEFAULT_BRAND
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,6 +51,10 @@ ATTR_CHARGING = 'charging'
 ATTR_CHARGER_TYPE = 'charger_type'
 ATTR_WIRED = 'wired'
 ATTR_WIRED_ONLY = 'wired_only'
+ATTR_LAST_VIDEO = 'last_video'
+ATTR_VOLUME = 'volume'
+ATTR_LAST_THUMBNAIL = 'last_thumbnail'
+ATTR_DURATION = 'duration'
 
 CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
 
@@ -65,33 +72,67 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 SERVICE_REQUEST_SNAPSHOT = 'aarlo_request_snapshot'
 SERVICE_REQUEST_SNAPSHOT_TO_FILE = 'aarlo_request_snapshot_to_file'
+SERVICE_REQUEST_VIDEO_TO_FILE = 'aarlo_request_video_to_file'
 SERVICE_STOP_ACTIVITY = 'aarlo_stop_activity'
+SERVICE_SIREN_ON = 'aarlo_siren_on'
+SERVICE_SIREN_OFF = 'aarlo_siren_off'
+SERVICE_RECORD_START = 'aarlo_start_recording'
+SERVICE_RECORD_STOP = 'aarlo_stop_recording'
+SIREN_ON_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
+    vol.Required(ATTR_DURATION): cv.positive_int,
+    vol.Required(ATTR_VOLUME): cv.positive_int,
+})
+SIREN_OFF_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
+})
+RECORD_START_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
+    vol.Required(ATTR_DURATION): cv.positive_int,
+})
 
 WS_TYPE_VIDEO_URL = 'aarlo_video_url'
+WS_TYPE_LIBRARY = 'aarlo_library'
+WS_TYPE_STREAM_URL = 'aarlo_stream_url'
+WS_TYPE_SNAPSHOT_IMAGE = 'aarlo_snapshot_image'
+WS_TYPE_VIDEO_DATA = 'aarlo_video_data'
+WS_TYPE_STOP_ACTIVITY = 'aarlo_stop_activity'
+WS_TYPE_SIREN_ON = 'aarlo_camera_siren_on'
+WS_TYPE_SIREN_OFF = 'aarlo_camera_siren_off'
 SCHEMA_WS_VIDEO_URL = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_VIDEO_URL,
     vol.Required('entity_id'): cv.entity_id,
     vol.Required('index'): cv.positive_int
 })
-WS_TYPE_LIBRARY = 'aarlo_library'
 SCHEMA_WS_LIBRARY = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_LIBRARY,
     vol.Required('entity_id'): cv.entity_id,
     vol.Required('at_most'): cv.positive_int
 })
-WS_TYPE_STREAM_URL = 'aarlo_stream_url'
 SCHEMA_WS_STREAM_URL = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_STREAM_URL,
     vol.Required('entity_id'): cv.entity_id
 })
-WS_TYPE_SNAPSHOT_IMAGE = 'aarlo_snapshot_image'
 SCHEMA_WS_SNAPSHOT_IMAGE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_SNAPSHOT_IMAGE,
     vol.Required('entity_id'): cv.entity_id
 })
-WS_TYPE_STOP_ACTIVITY = 'aarlo_stop_activity'
+SCHEMA_WS_VIDEO_DATA = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): WS_TYPE_VIDEO_DATA,
+    vol.Required('entity_id'): cv.entity_id
+})
 SCHEMA_WS_STOP_ACTIVITY = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_STOP_ACTIVITY,
+    vol.Required('entity_id'): cv.entity_id
+})
+SCHEMA_WS_SIREN_ON = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): WS_TYPE_SIREN_ON,
+    vol.Required('entity_id'): cv.entity_id,
+    vol.Required(ATTR_DURATION): cv.positive_int,
+    vol.Required(ATTR_VOLUME): cv.positive_int
+})
+SCHEMA_WS_SIREN_OFF = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): WS_TYPE_SIREN_OFF,
     vol.Required('entity_id'): cv.entity_id
 })
 
@@ -102,11 +143,15 @@ async def async_setup_platform(hass, config, async_add_entities, _discovery_info
     component = hass.data[DOMAIN]
 
     cameras = []
+    cameras_with_siren = False
     for camera in arlo.cameras:
-        cameras.append(ArloCam(hass, camera, config))
+        cameras.append(ArloCam(camera, config))
+        if camera.has_capability('siren'):
+            cameras_with_siren = True
 
     async_add_entities(cameras)
 
+    # Services
     component.async_register_entity_service(
         SERVICE_REQUEST_SNAPSHOT, CAMERA_SERVICE_SCHEMA,
         aarlo_snapshot_service_handler
@@ -116,9 +161,32 @@ async def async_setup_platform(hass, config, async_add_entities, _discovery_info
         aarlo_snapshot_to_file_service_handler
     )
     component.async_register_entity_service(
+        SERVICE_REQUEST_VIDEO_TO_FILE, CAMERA_SERVICE_SNAPSHOT,
+        aarlo_video_to_file_service_handler
+    )
+    component.async_register_entity_service(
         SERVICE_STOP_ACTIVITY, CAMERA_SERVICE_SCHEMA,
         aarlo_stop_activity_handler
     )
+    if cameras_with_siren:
+        component.async_register_entity_service(
+            SERVICE_SIREN_ON, SIREN_ON_SCHEMA,
+            aarlo_siren_on_service_handler
+        )
+        component.async_register_entity_service(
+            SERVICE_SIREN_OFF, SIREN_OFF_SCHEMA,
+            aarlo_siren_off_service_handler
+        )
+    component.async_register_entity_service(
+        SERVICE_RECORD_START, RECORD_START_SCHEMA,
+        aarlo_start_recording_handler
+    )
+    component.async_register_entity_service(
+        SERVICE_RECORD_STOP, CAMERA_SERVICE_SCHEMA,
+        aarlo_stop_recording_handler
+    )
+
+    # Websockets
     hass.components.websocket_api.async_register_command(
         WS_TYPE_VIDEO_URL, websocket_video_url,
         SCHEMA_WS_VIDEO_URL
@@ -136,15 +204,28 @@ async def async_setup_platform(hass, config, async_add_entities, _discovery_info
         SCHEMA_WS_SNAPSHOT_IMAGE
     )
     hass.components.websocket_api.async_register_command(
+        WS_TYPE_VIDEO_DATA, websocket_video_data,
+        SCHEMA_WS_VIDEO_DATA
+    )
+    hass.components.websocket_api.async_register_command(
         WS_TYPE_STOP_ACTIVITY, websocket_stop_activity,
         SCHEMA_WS_STOP_ACTIVITY
     )
+    if cameras_with_siren:
+        hass.components.websocket_api.async_register_command(
+            WS_TYPE_SIREN_ON, websocket_siren_on,
+            SCHEMA_WS_SIREN_ON
+        )
+        hass.components.websocket_api.async_register_command(
+            WS_TYPE_SIREN_OFF, websocket_siren_off,
+            SCHEMA_WS_SIREN_OFF
+        )
 
 
 class ArloCam(Camera):
     """An implementation of a Netgear Arlo IP camera."""
 
-    def __init__(self, hass, camera, config):
+    def __init__(self, camera, config):
         """Initialize an Arlo camera."""
         super().__init__()
         self._name = camera.name
@@ -153,7 +234,6 @@ class ArloCam(Camera):
         self._state = None
         self._recent = False
         self._motion_status = False
-        self._ffmpeg = hass.data[DATA_FFMPEG]
         self._ffmpeg_arguments = config.get(CONF_FFMPEG_ARGUMENTS)
         _LOGGER.info('ArloCam: %s created', self._name)
 
@@ -212,14 +292,17 @@ class ArloCam(Camera):
             _LOGGER.error(error_msg)
             return
 
-        stream = CameraMjpeg(self._ffmpeg.binary, loop=self.hass.loop)
+        ffmpeg_manager = self.hass.data[DATA_FFMPEG]
+        stream = CameraMjpeg(ffmpeg_manager.binary, loop=self.hass.loop)
         await stream.open_camera(
             video.video_url, extra_cmd=self._ffmpeg_arguments)
 
         try:
+            stream_reader = await stream.get_reader()
             return await async_aiohttp_proxy_stream(
-                self.hass, request, stream,
-                'multipart/x-mixed-replace;boundary=ffserver')
+                self.hass, request, stream_reader,
+                ffmpeg_manager.ffmpeg_stream_content_type)
+
         finally:
             await stream.close()
 
@@ -268,12 +351,18 @@ class ArloCam(Camera):
                 (ATTR_CHARGER_TYPE, self._camera.charger_type),
                 (ATTR_WIRED, self._camera.wired),
                 (ATTR_WIRED_ONLY, self._camera.wired_only),
+                (ATTR_LAST_THUMBNAIL, self.last_thumbnail_url),
+                (ATTR_LAST_VIDEO, self.last_video_url),
             ) if value is not None
         }
 
         attrs[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
         attrs['brand'] = DEFAULT_BRAND
+        attrs['device_id'] = self._camera.device_id
+        attrs['model_id'] = self._camera.model_id
+        attrs['parent_id'] = self._camera.parent_id
         attrs['friendly_name'] = self._name
+        attrs['siren'] = self._camera.has_capability('siren')
 
         return attrs
 
@@ -295,6 +384,16 @@ class ArloCam(Camera):
     @property
     def last_video(self):
         return self._camera.last_video
+
+    @property
+    def last_thumbnail_url(self):
+        video = self._camera.last_video
+        return video.thumbnail_url if video is not None else None
+
+    @property
+    def last_video_url(self):
+        video = self._camera.last_video
+        return video.video_url if video is not None else None
 
     def last_n_videos(self, count):
         return self._camera.last_n_videos(count)
@@ -329,11 +428,56 @@ class ArloCam(Camera):
     def async_get_snapshot(self):
         return self.hass.async_add_job(self.get_snapshot)
 
+    def get_video(self):
+        return self._camera.get_video()
+
+    def async_get_video(self):
+        return self.hass.async_add_job(self.get_video)
+
     def stop_activity(self):
         return self._camera.stop_activity()
 
     def async_stop_activity(self):
-        return self.hass.async_add_job(self._camera.stop_activity)
+        return self.hass.async_add_job(self.stop_activity)
+
+    def siren_on(self, duration=30, volume=10):
+        if self._camera.has_capability('siren'):
+            _LOGGER.debug("{0} siren on {1}/{2}".format(self.unique_id, volume, duration))
+            self._camera.siren_on(duration=duration, volume=volume)
+            return True
+        return False
+
+    def siren_off(self):
+        if self._camera.has_capability('siren'):
+            _LOGGER.debug("{0} siren off".format(self.unique_id))
+            self._camera.siren_off()
+            return True
+        return False
+
+    def async_siren_on(self, duration, volume):
+        return self.hass.async_add_job(self.siren_on, duration=duration, volume=volume)
+
+    def async_siren_off(self):
+        return self.hass.async_add_job(self.siren_off)
+
+    def start_recording(self, duration):
+
+        def _stop_recording(_now):
+            self.stop_recording()
+
+        if self._camera.get_stream() is not None:
+            self._camera.start_recording()
+            async_track_point_in_time(self.hass, _stop_recording, dt_util.utcnow() + timedelta(seconds=duration))
+
+    def stop_recording(self):
+        self._camera.stop_recording()
+        self._camera.stop_activity()
+
+    def async_start_recording(self, duration):
+        return self.hass.async_add_job(self.start_recording, duration=duration)
+
+    def async_stop_recording(self):
+        return self.hass.async_add_job(self.stop_recording)
 
 
 def _get_camera_from_entity_id(hass, entity_id):
@@ -427,6 +571,25 @@ async def websocket_snapshot_image(hass, connection, msg):
 
 
 @websocket_api.async_response
+async def websocket_video_data(hass, connection, msg):
+    camera = _get_camera_from_entity_id(hass, msg['entity_id'])
+    _LOGGER.debug('video_data for ' + str(camera.unique_id))
+
+    try:
+        video = await camera.async_get_video()
+        connection.send_message(websocket_api.result_message(
+            msg['id'], {
+                'content_type': 'video/mp4',
+                'content': base64.b64encode(video).decode('utf-8')
+            }
+        ))
+
+    except HomeAssistantError:
+        connection.send_message(websocket_api.error_message(
+            msg['id'], 'video_fetch_failed', 'Unable to fetch video'))
+
+
+@websocket_api.async_response
 async def websocket_stop_activity(hass, connection, msg):
     camera = _get_camera_from_entity_id(hass, msg['entity_id'])
     _LOGGER.debug('stop_activity for ' + str(camera.unique_id))
@@ -435,6 +598,32 @@ async def websocket_stop_activity(hass, connection, msg):
     connection.send_message(websocket_api.result_message(
         msg['id'], {
             'stopped': stopped
+        }
+    ))
+
+
+@websocket_api.async_response
+async def websocket_siren_on(hass, connection, msg):
+    camera = _get_camera_from_entity_id(hass, msg['entity_id'])
+    _LOGGER.debug('stop_activity for ' + str(camera.unique_id))
+
+    await camera.async_siren_on(duration=msg['duration'], volume=msg['volume'])
+    connection.send_message(websocket_api.result_message(
+        msg['id'], {
+            'siren': 'on'
+        }
+    ))
+
+
+@websocket_api.async_response
+async def websocket_siren_off(hass, connection, msg):
+    camera = _get_camera_from_entity_id(hass, msg['entity_id'])
+    _LOGGER.debug('stop_activity for ' + str(camera.unique_id))
+
+    await camera.async_siren_off()
+    connection.send_message(websocket_api.result_message(
+        msg['id'], {
+            'siren': 'off'
         }
     ))
 
@@ -479,6 +668,57 @@ async def aarlo_snapshot_to_file_service_handler(camera, service):
         _LOGGER.error("Can't write image to file: %s", err)
 
 
+async def aarlo_video_to_file_service_handler(camera, service):
+    _LOGGER.info("{0} video to file".format(camera.unique_id))
+
+    hass = camera.hass
+    filename = service.data[ATTR_FILENAME]
+    filename.hass = hass
+
+    video_file = filename.async_render(variables={ATTR_ENTITY_ID: camera})
+
+    # check if we allow to access to that file
+    if not hass.config.is_allowed_path(video_file):
+        _LOGGER.error("Can't write %s, no access to path!", video_file)
+        return
+
+    image = await camera.async_get_video()
+
+    def _write_image(to_file, image_data):
+        with open(to_file, 'wb') as img_file:
+            img_file.write(image_data)
+
+    try:
+        await hass.async_add_executor_job(_write_image, video_file, image)
+        hass.bus.fire('aarlo_video_ready', {
+            'entity_id': 'aarlo.' + camera.unique_id,
+            'file': video_file
+        })
+    except OSError as err:
+        _LOGGER.error("Can't write image to file: %s", err)
+
+    _LOGGER.debug("{0} video to file finished".format(camera.unique_id))
+
+
 async def aarlo_stop_activity_handler(camera, _service):
     _LOGGER.info("{0} stop activity".format(camera.unique_id))
     camera.stop_activity()
+
+
+async def aarlo_siren_on_service_handler(camera, service):
+    volume = service.data[ATTR_VOLUME]
+    duration = service.data[ATTR_DURATION]
+    camera.siren_on(duration=duration, volume=volume)
+
+
+async def aarlo_siren_off_service_handler(camera, _service):
+    camera.siren_off()
+
+
+async def aarlo_start_recording_handler(camera, service):
+    duration = service.data[ATTR_DURATION]
+    camera.start_recording(duration=duration)
+
+
+async def aarlo_stop_recording_handler(camera, _service):
+    camera.stop_recording()
