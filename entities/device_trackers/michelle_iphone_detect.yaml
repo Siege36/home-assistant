@@ -1,0 +1,4 @@
+---
+platform: iphonedetect
+hosts:
+  michelle_iphonedetect: 192.168.1.110

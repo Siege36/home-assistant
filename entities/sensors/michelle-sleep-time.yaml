@@ -1,0 +1,8 @@
+---
+#
+# Itegrates with cj-bed-sensor to display how many hours sleep I received each night
+#
+# https://www.home-assistant.io/components/sensor.mqtt/
+platform: mqtt
+state_topic: "michelle-sleep-time"
+name: michelle-sleep-time

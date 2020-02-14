@@ -1,0 +1,8 @@
+---
+#
+# Customizes the garage side door contact entity
+#
+# https://www.home-assistant.io/docs/configuration/customizing-devices/
+#
+binary_sensor.garage_side_door_contact:
+  device_class: door

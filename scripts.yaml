@@ -1,0 +1,20 @@
+'1579376783662':
+  alias: weigh_cj
+  sequence:
+  - event: weigh_cj
+    event_data: {}
+'1579377805077':
+  alias: weigh_michelle
+  sequence:
+  - event: ''
+    event_data: {}
+'1581600477076':
+  alias: maras_bedtime
+  sequence:
+  - event: ''
+    event_data: {}
+'1581600497501':
+  alias: dinners_ready
+  sequence:
+  - event: ''
+    event_data: {}

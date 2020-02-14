@@ -1,0 +1,15 @@
+---
+# Sonoff S31 flashed with Tasmota
+# 
+#
+#
+platform: mqtt
+name: "sonoff_plug_1_watts"
+state_topic: "tele/sonoff_plug_1/SENSOR"
+value_template: "{{value_json['ENERGY'].Power }}"
+qos: 2
+unit_of_measurement : "W"
+icon: mdi:flash-circle
+availability_topic: "tele/sonoff_plug_1/LWT"
+payload_available: "Online"
+payload_not_available: "Offline"

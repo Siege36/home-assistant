@@ -1,0 +1,8 @@
+---
+#
+# Customizes the Garage Side Door Acceplerometer entity
+#
+# https://www.home-assistant.io/docs/configuration/customizing-devices/
+#
+binary_sensor.garage_side_door_accelerometer:
+  device_class: vibration

@@ -5,13 +5,15 @@ import zlib
 
 from .constant import (ACTIVITY_STATE_KEY, BRIGHTNESS_KEY,
                        CAPTURED_TODAY_KEY, FLIP_KEY, IDLE_SNAPSHOT_PATH, LAST_CAPTURE_KEY,
-                       LAST_IMAGE_DATA_KEY, LAST_IMAGE_KEY,
+                       CRY_DETECTION_KEY, LIGHT_BRIGHTNESS_KEY, LIGHT_MODE_KEY,
+                       LAST_IMAGE_DATA_KEY, LAST_IMAGE_KEY, LAMP_STATE_KEY,
                        LAST_IMAGE_SRC_KEY, MEDIA_COUNT_KEY,
                        MEDIA_UPLOAD_KEYS, MIRROR_KEY, MOTION_SENS_KEY,
                        POWER_SAVE_KEY, PRELOAD_DAYS, PRIVACY_KEY,
                        RECORD_START_PATH, RECORD_STOP_PATH,
                        SNAPSHOT_KEY, SIREN_STATE_KEY, STREAM_SNAPSHOT_KEY,
-                       STREAM_SNAPSHOT_PATH, STREAM_START_PATH, CAMERA_MEDIA_DELAY)
+                       STREAM_SNAPSHOT_PATH, STREAM_START_PATH, CAMERA_MEDIA_DELAY,
+                       AUDIO_POSITION_KEY, AUDIO_TRACK_KEY, DEFAULT_TRACK_ID, MEDIA_PLAYER_RESOURCE_ID)
 from .device import ArloChildDevice
 from .util import http_get, http_get_img
 
@@ -216,6 +218,43 @@ class ArloCamera(ArloChildDevice):
                 self._save_and_do_callbacks('humidity', data.get('humidity'))
                 self._save_and_do_callbacks('airQuality', data.get('airQuality'))
 
+        # night light
+        nightlight = event.get("properties", {}).get("nightLight", None)
+        if nightlight is not None:
+            self._arlo.debug("got a night light {}".format(nightlight.get("enabled", False)))
+            if nightlight.get("enabled", False) is True:
+                self._save_and_do_callbacks(LAMP_STATE_KEY, "on")
+            else:
+                self._save_and_do_callbacks(LAMP_STATE_KEY, "off")
+
+            brightness = nightlight.get("brightness")
+            if brightness is not None:
+                self._save_and_do_callbacks(LIGHT_BRIGHTNESS_KEY, brightness)
+
+            mode = nightlight.get("mode")
+            if mode is not None:
+                rgb = nightlight.get("rgb")
+                temperature = nightlight.get("temperature")
+
+                light_mode = {
+                    'mode': mode
+                }
+
+                if rgb is not None:
+                    light_mode['rgb'] = rgb
+                if temperature is not None:
+                    light_mode['temperature'] = temperature
+
+                self._save_and_do_callbacks(LIGHT_MODE_KEY, light_mode)
+
+        # audio analytics
+        audioanalytics = event.get("properties", {}).get("audioAnalytics", None)
+        if audioanalytics is not None:
+            if audioanalytics.get(CRY_DETECTION_KEY, {}).get("triggered") is True:
+                self._save_and_do_callbacks(CRY_DETECTION_KEY, "on")
+            else:
+                self._save_and_do_callbacks(CRY_DETECTION_KEY, "off")
+
         # pass on to lower layer
         super()._event_handler(resource, event)
 
@@ -331,6 +370,12 @@ class ArloCamera(ArloChildDevice):
         if cap in 'siren':
             if self.model_id.startswith('VMC5040') or self.model_id.startswith('VMC4040'):
                 return True
+        if cap in 'mediaPlayer' and self.model_id == 'ABC1000':
+            return True
+        if cap in 'nightLight' and self.model_id.startswith("ABC1000"):
+            return True
+        if cap in 'babyCryDetection' and self.model_id.startswith("ABC1000"):
+            return True
         return super().has_capability(cap)
 
     def take_streaming_snapshot(self):
@@ -507,3 +552,159 @@ class ArloCamera(ArloChildDevice):
 
     def turn_off(self):
         self._arlo.bg.run(self._arlo.be.async_on_off, base=self.base_station, device=self, privacy_on=True)
+
+    def get_audio_playback_status(self):
+        """Gets the current playback status and available track list"""
+        body = {
+            'action': 'get',
+            'publishResponse': True,
+            'resource': 'audioPlayback'
+        }
+        self._arlo.bg.run(self._arlo.be.notify, base=self, body=body)
+
+    def play_track(self, track_id=DEFAULT_TRACK_ID, position=0):
+        body = {
+            'action': 'playTrack',
+            'publishResponse': True,
+            'resource': MEDIA_PLAYER_RESOURCE_ID,
+            'properties': {
+                AUDIO_TRACK_KEY: track_id,
+                AUDIO_POSITION_KEY: position
+            }
+        }
+        self._arlo.bg.run(self._arlo.be.notify, base=self, body=body)
+
+    def pause_track(self):
+        body = {
+            'action': 'pause',
+            'publishResponse': True,
+            'resource': MEDIA_PLAYER_RESOURCE_ID,
+        }
+        self._arlo.bg.run(self._arlo.be.notify, base=self, body=body)
+
+    def previous_track(self):
+        """Skips to the previous track in the playlist."""
+        body = {
+            'action': 'prevTrack',
+            'publishResponse': True,
+            'resource': MEDIA_PLAYER_RESOURCE_ID,
+        }
+        self._arlo.bg.run(self._arlo.be.notify, base=self, body=body)
+
+    def next_track(self):
+        """Skips to the next track in the playlist."""
+        body = {
+            'action': 'nextTrack',
+            'publishResponse': True,
+            'resource': MEDIA_PLAYER_RESOURCE_ID,
+        }
+        self._arlo.bg.run(self._arlo.be.notify, base=self, body=body)
+
+    def set_music_loop_mode_continuous(self):
+        """Sets the music loop mode to repeat the entire playlist."""
+        body = {
+            'action': 'set',
+            'publishResponse': True,
+            'resource': 'audioPlayback/config',
+            'properties': {
+                'config': {
+                    'loopbackMode': 'continuous'
+                }
+            }
+        }
+        self._arlo.bg.run(self._arlo.be.notify, base=self, body=body)
+
+    def set_music_loop_mode_single(self):
+        """Sets the music loop mode to repeat the current track."""
+        body = {
+            'action': 'set',
+            'publishResponse': True,
+            'resource': 'audioPlayback/config',
+            'properties': {
+                'config': {
+                    'loopbackMode': 'singleTrack'
+                }
+            }
+        }
+        self._arlo.bg.run(self._arlo.be.notify, base=self, body=body)
+
+    def set_shuffle(self, shuffle=True):
+        """Sets playback to shuffle."""
+        body = {
+            'action': 'set',
+            'publishResponse': True,
+            'resource': 'audioPlayback/config',
+            'properties': {
+                'config': {
+                    'shuffleActive': shuffle
+                }
+            }
+        }
+        self._arlo.bg.run(self._arlo.be.notify, base=self, body=body)
+
+    def set_volume(self, mute=False, volume=50):
+        """Sets the music volume (0-100)"""
+        body = {
+            'action': 'set',
+            'publishResponse': True,
+            'resource': self.resource_id,
+            'properties': {
+                'speaker': {
+                    'mute': mute,
+                    'volume': volume
+                }
+            }
+        }
+        self._arlo.bg.run(self._arlo.be.notify, base=self, body=body)
+
+    def _set_nightlight_properties(self, properties):
+        self._arlo.debug('{}: setting nightlight properties: {}'.format(self._name, properties))
+        self._arlo.bg.run(self._arlo.be.notify,
+                          base=self.base_station,
+                          body={
+                              'action': 'set',
+                              'properties': {
+                                  'nightLight': properties
+                              },
+                              'publishResponse': True,
+                              'resource': self.resource_id,
+                          })
+        return True
+
+    def nightlight_on(self):
+        """Turns the nightlight on."""
+        return self._set_nightlight_properties({
+            'enabled': True
+        })
+
+    def nightlight_off(self):
+        """Turns the nightlight off."""
+        return self._set_nightlight_properties({
+            'enabled': False
+        })
+
+    def set_nightlight_brightness(self, brightness):
+        """Turns the nightlight brightness value (0-255)."""
+        return self._set_nightlight_properties({
+            'brightness': brightness
+        })
+
+    def set_nightlight_rgb(self, red=255, green=255, blue=255):
+        """Turns the nightlight color to the specified RGB value."""
+        return self._set_nightlight_properties({
+            'mode': 'rgb',
+            'rgb': {'red': red, 'green': green, 'blue': blue}
+        })
+
+    def set_nightlight_color_temperature(self, temperature):
+        """Turns the nightlight to the specified Kelvin color temperature."""
+        return self._set_nightlight_properties({
+            'mode': 'temperature',
+            'temperature': str(temperature)
+        })
+
+    def set_nightlight_mode(self, mode):
+        """Turns the nightlight to a particular mode (rgb, temperature, rainbow)."""
+        return self._set_nightlight_properties({
+            'mode': mode
+        })

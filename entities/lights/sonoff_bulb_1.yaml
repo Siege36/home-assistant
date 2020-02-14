@@ -1,0 +1,19 @@
+---
+#
+# Sonoff B1 Bulb flashed with Tasmota
+#
+#
+platform: mqtt
+name: "sonoff_bulb_1"
+command_topic: "cmnd/sonoff_bulb_1/power"
+state_topic: "stat/sonoff_bulb_1/POWER"
+rgb_state_topic: "stat/sonoff_bulb_1/color"
+rgb_command_topic: "cmnd/sonoff_bulb_1/color"
+brightness_state_topic: "stat/sonoff_bulb_1/dimmer"
+brightness_command_topic: "cmnd/sonoff_bulb_1/dimmer"
+color_temp_state_topic: "stat/sonoff_bulb_1/CT"
+color_temp_command_topic: "cmnd/sonoff_bulb_1/CT"
+qos: 2
+payload_on: "ON"
+payload_off: "OFF"
+retain: true

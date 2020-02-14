@@ -6,6 +6,8 @@
 alexa:
   smart_home:
     filter:
+      include_domains:
+        - script
       include_entities:
         - cover.garage_door
         - input_boolean.btn_dinner_ready
@@ -14,11 +16,15 @@ alexa:
         - light.living_room_lamp
         - light.maras_lamp
         - lock.door_to_garage
-        - switch.bonus_room_lamp
-        - switch.christmas_tree
+        - light.bonus_room_light
+        - light.christmas_tree
+        - light.sonoff_bulb_1
         - switch.front_porch_light
         - switch.garage_outside_light
     entity_config:
+      light.sonoff_bulb_1:
+        name: Sonoff Bulb 1
+        display_categories: LIGHT
       cover.garage_door:
         name: Garage Door
         display_categories: DOOR
@@ -49,7 +55,7 @@ alexa:
       switch.christmas_lights:
         name: Christmas Lights
         display_categories: LIGHT
-      switch.christmas_tree:
+      light.christmas_tree:
         name: Christmas Tree
         display_categories: LIGHT
       switch.front_porch_light:

@@ -1,0 +1,6 @@
+---
+# Web OS TV (LG)
+#
+# https://www.home-assistant.io/integrations/webostv/
+#
+webostv: !include_dir_list ../entities/webostvs

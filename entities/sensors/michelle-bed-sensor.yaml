@@ -1,0 +1,8 @@
+---
+# Implementation of bed occupancy sensor
+# 
+# https://github.com/Siege36/bed-occupancy-sensor
+#
+platform: mqtt
+state_topic: 'michelle-bed-sensor'
+name: "Raw Michelle Bed Weight Measurement"

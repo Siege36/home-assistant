@@ -19,3 +19,7 @@ monitored_conditions:
   - sunrise_time
   - sunset_time
   - alerts
+  - cloud_cover
+  - moon_phase
+  - wind_speed
+  - wind_bearing

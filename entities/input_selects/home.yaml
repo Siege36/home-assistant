@@ -5,6 +5,8 @@
 #
 home:
   options:
-    - Unoccupied
-    - Occupied
+    - Day
+    - Evening
+    - Night
+    - Away
     - Extended Away

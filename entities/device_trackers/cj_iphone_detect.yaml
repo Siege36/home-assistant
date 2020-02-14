@@ -1,0 +1,4 @@
+---
+platform: iphonedetect
+hosts:
+  cj_iphonedetect: 192.168.1.12

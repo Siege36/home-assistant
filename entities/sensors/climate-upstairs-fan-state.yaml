@@ -1,0 +1,6 @@
+---
+# Splits Downstairs Climate Fan State Out
+platform: template
+sensors:
+  upstairs_climate_fan_state:
+    value_template: '{{ states.climate.upstairs_thermostat.attributes["fan"] }}'

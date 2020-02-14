@@ -1,0 +1,14 @@
+---
+# Sonoff S31 flashed with Tasmota
+# 
+#
+#
+platform: mqtt
+name: "sonoff_plug_1_energy_yesterday"
+state_topic: "tele/sonoff_plug_1/SENSOR"
+value_template: "{{value_json['ENERGY'].Yesterday }}"
+qos: 2
+unit_of_measurement : "kWh"
+availability_topic: "tele/sonoff_plug_1/LWT"
+payload_available: "Online"
+payload_not_available: "Offline"

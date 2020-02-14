@@ -51,6 +51,10 @@ class HomeFeedNotificationPopup extends HomeFeedCardHelpers.LitElement {
         			overflow-wrap: break-word;
       			}
       			
+      			ha-markdown img {
+                  max-width: 100%;
+                }
+                
       			a {
         			color: var(--primary-color);
       			}
@@ -133,7 +137,13 @@ class HomeFeedCard extends HomeFeedCardHelpers.LitElement {
 		this.feedContent = null;
 		this.loadModules();
   	}
-
+  	
+	static get properties() { return {
+    	_config: { type: Object },
+    	hass: { type: Object }
+  		};
+  	}
+  
 	loadModules(){
 		try{
 			import("./moment.js").then((module) => {
@@ -252,6 +262,10 @@ class HomeFeedCard extends HomeFeedCardHelpers.LitElement {
         			color: var(--primary-color);
   				}
   				
+  				ha-markdown img {
+                  max-width: 100%;
+                }
+                
 				ha-markdown.compact {
 					max-width: 65%;
 				}
@@ -358,6 +372,12 @@ class HomeFeedCard extends HomeFeedCardHelpers.LitElement {
 	}
   
   computeStateDisplay(stateObj, entityConfig){
+  	let domain = entityConfig.entity.split('.')[0];
+  	
+  	if(domain == "automation"){
+  		return "Triggered";
+  	}
+  	
   	var state = entityConfig.state_map && entityConfig.state_map[stateObj.state] ? entityConfig.state_map[stateObj.state] : null;
   	
   	if(!state){
@@ -384,7 +404,19 @@ class HomeFeedCard extends HomeFeedCardHelpers.LitElement {
   getEntities() {
   		let data = this.entities.filter(i => i.multiple_items !== true && i.include_history !== true).map(i => {
   		let stateObj = this._hass.states[i.entity];
-  		if(!i.exclude_states.includes(stateObj.state))
+  		
+  		if(stateObj == null) {
+  			return { entity_id: i.entity, icon: null, entity: i.entity, display_name: this._hass.localize(
+            "ui.panel.lovelace.warning.entity_not_found",
+            "entity",
+            i.entity
+          	), more_info_on_tap: false, 
+          	content_template: null, state: "unavailable", stateObj: null, item_type: "unavailable",   };
+  		}
+  		let domain = i.entity.split(".")[0];
+  		if(!i.exclude_states.includes(stateObj.state) 
+  		&& (domain != "automation" || stateObj.attributes.last_triggered) // Exclude automations which have never been triggered
+  		)
   		{
   			return { ...stateObj, icon: this.getIcon(stateObj, i.icon), entity: i.entity, display_name: ((i.name) ? i.name : stateObj.attributes.friendly_name), format: (i.format != null ? i.format : "relative"), more_info_on_tap: i.more_info_on_tap, content_template: i.content_template, state: this.computeStateDisplay(stateObj, i), stateObj: stateObj, item_type: "entity",   };
 	 	}
@@ -421,7 +453,8 @@ class HomeFeedCard extends HomeFeedCardHelpers.LitElement {
   				let created = (i.timestamp_property && p[i.timestamp_property]) ? p[i.timestamp_property] : stateObj.last_changed;
   				let timeStamp = isNaN(created) ? created : new Date(created * 1000);
   				return { ...stateObj, icon: icon, format: (i.format != null ? i.format : "relative"), entity: i.entity, display_name: this.applyTemplate(p, i.content_template), last_changed: timeStamp, stateObj: stateObj, more_info_on_tap: i.more_info_on_tap, item_data: p, detail: i.detail_template ? this.applyTemplate(p, i.detail_template, false) : null,  item_type: "multi_entity",   };
-  			}).slice(0, (i.max_items) ? i.max_items : 5);
+  			}).sort((a, b) => (a.last_changed < b.last_changed) ? 1 : -1) // Sort in reverse order of time to ensure latest items always first
+  			.slice(0, (i.max_items) ? i.max_items : 5);
   		});
 	 	
 	 	return [].concat.apply([], data);
@@ -430,6 +463,7 @@ class HomeFeedCard extends HomeFeedCardHelpers.LitElement {
   getHistoryState(stateObj, item){
   	var newStateObj = {};
   	Object.assign(newStateObj, stateObj);
+  	newStateObj.attributes = item.attributes;
   	newStateObj.state = item.state;
   	newStateObj.last_changed = item.last_changed;
   	newStateObj.last_updated = item.last_updated;
@@ -506,8 +540,11 @@ class HomeFeedCard extends HomeFeedCardHelpers.LitElement {
 	if(!this.calendars || this.calendars.length == 0) return [];
 	let lastUpdate = JSON.parse(localStorage.getItem('home-feed-card-eventsLastUpdate' + this.pageId + this._config.title));
 	if(!lastUpdate || (this.moment && this.moment().diff(lastUpdate, 'minutes') > 15)) {
-		const start = this.moment.utc().startOf('day').format("YYYY-MM-DDTHH:mm:ss");
-    	const end = this.moment.utc().startOf('day').add(2, 'days').format("YYYY-MM-DDTHH:mm:ss");
+		let calendarDaysBack = (this._config.calendar_days_back ? this._config.calendar_days_back : 0);
+		let calendarDaysForward = (this._config.calendar_days_forward ? this._config.calendar_days_forward : 1);
+		
+		const start = this.moment.utc().startOf('day').add(calendarDaysBack).format("YYYY-MM-DDTHH:mm:ss");
+    	const end = this.moment.utc().startOf('day').add(calendarDaysForward + 1, 'days').format("YYYY-MM-DDTHH:mm:ss");
 		try{
 			var calendars = await Promise.all(
         	this.calendars.map(
@@ -632,7 +669,16 @@ class HomeFeedCard extends HomeFeedCardHelpers.LitElement {
     					return item.state;
     				}
     				else{
-    					return (item.attributes.last_changed ? item.attributes.last_changed : item.last_changed);
+    					let domain = item.entity_id.split('.')[0];
+    					
+    					if(domain == "automation")
+    					{
+    						return item.attributes.last_triggered;
+    					}
+    					else{
+    						return (item.attributes.last_changed ? item.attributes.last_changed : item.last_changed);
+    					}
+    					
     				}
     			default:
     				return new Date().toISOString();
@@ -706,19 +752,30 @@ class HomeFeedCard extends HomeFeedCardHelpers.LitElement {
     popup.appendChild(message);
     this.moreInfo(Object.keys(this._hass.states)[0]);
     let moreInfo = document.querySelector("home-assistant")._moreInfoEl;
+    
+    const oldContent = moreInfo.shadowRoot.querySelector("more-info-controls");
+    if(oldContent) oldContent.style['display'] = 'none';
+
     moreInfo._page = "none";
     moreInfo.shadowRoot.appendChild(popup);
     moreInfo.large = large;
     //document.querySelector("home-assistant").provideHass(message);
 
-    setTimeout(() => {
-      let interval = setInterval(() => {
-        if (moreInfo.getAttribute('aria-hidden')) {
-          popup.parentNode.removeChild(popup);
-          clearInterval(interval);
-        }
-      }, 100)
-    }, 1000);
+	moreInfo._dialogOpenChanged = function(newVal) {
+    if (!newVal) {
+      if(this.stateObj)
+        this.fire("hass-more-info", {entityId: null});
+
+      if (this.shadowRoot == popup.parentNode) {
+        this._page = null;
+        this.shadowRoot.removeChild(popup);
+
+        const oldContent = this.shadowRoot.querySelector("more-info-controls");
+        if(oldContent) oldContent.style['display'] = "";
+      }
+    }
+   }
+   
   history.onpushstate = this.closePopUp;
   return moreInfo;
   }
@@ -875,6 +932,7 @@ class HomeFeedCard extends HomeFeedCardHelpers.LitElement {
 			case "entity":
 			case "entity_history":
 				var icon = n.icon;
+				let domain = n.entity_id.split('.')[0];
 				
 				if(n.attributes.device_class === "timestamp"){
 					var contentText = `${n.display_name}`;
@@ -891,6 +949,11 @@ class HomeFeedCard extends HomeFeedCardHelpers.LitElement {
 				break;
 			case "multi_entity":
 				var icon = n.icon;
+				
+				var contentText = `${n.display_name}`;
+				break;
+			case "unavailable":
+				var icon = "mdi:alert-circle";
 				
 				var contentText = `${n.display_name}`;
 				break;
@@ -1010,14 +1073,24 @@ class HomeFeedCard extends HomeFeedCardHelpers.LitElement {
 				${closeLink}
 			</div>
 			<div class="item-content ${contentClass}" .item=${n} @click=${clickable ? this._handleClick : null}>
-				<ha-markdown class="markdown-content ${compact_mode ? "compact" : ""}" style="float:left;" .content=${contentText}></ha-markdown>
-				${timeItem}
+				${this.itemContent(n, compact_mode, contentText)}
+				${n.item_type != "unavailable" ? timeItem : null}
 			</div>
 		</div>
 		${compact_mode ? HomeFeedCardHelpers.html`` : HomeFeedCardHelpers.html`<hr style="clear:both;"/>`}
 		`;
 	}
   	
+  	itemContent(item, compact_mode, contentText){
+  		if(item.item_type == "unavailable"){
+  			return HomeFeedCardHelpers.html`
+  			<hui-warning class="markdown-content ${compact_mode ? "compact" : ""}" style="float:left;">${contentText}</hui-warning>
+  			`;
+  		}
+  		return HomeFeedCardHelpers.html`
+  		<ha-markdown class="markdown-content ${compact_mode ? "compact" : ""}" style="float:left;" .content=${contentText}></ha-markdown>
+  		`;
+  	}
   	get notificationButton() {
       if(!this._notificationButton){
       	this._notificationButton = this.rootElement.querySelector("hui-notifications-button");

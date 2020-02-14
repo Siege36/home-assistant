@@ -1,0 +1,8 @@
+---
+# Default MQTT sensor implementation
+#
+# Node-Red publishes to this state
+#
+platform: mqtt
+name: "Washer State"
+state_topic: "washer"
